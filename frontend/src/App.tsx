@@ -3,8 +3,10 @@ import { ReactFlow, Background, Controls, type Edge, type Node } from "@xyflow/r
 import "@xyflow/react/dist/style.css";
 import { treeToFlow } from "./graph/toFlow";
 import type { TrainedModel } from "./types";
+import { DecisionNodeView, LeafNodeView } from "./graph/nodes";
 
 const API = import.meta.env.VITE_API_URL ?? "http://localhost:3001";
+const nodeTypes = { decision: DecisionNodeView, leaf: LeafNodeView };
 
 export default function App() {
   const [nodes, setNodes] = useState<Node[]>([]);
@@ -27,7 +29,7 @@ export default function App() {
 
   return (
     <div style={{ width: "100vw", height: "100vh" }}>
-      <ReactFlow nodes={nodes} edges={edges} fitView>
+      <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} fitView>
         <Background />
         <Controls />
       </ReactFlow>

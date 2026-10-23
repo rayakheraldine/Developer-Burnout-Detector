@@ -2,11 +2,11 @@
 import type { Edge, Node } from "@xyflow/react";
 import type { DecisionNode, TreeNode } from "../types";
 
-export const NODE_WIDTH = 180;
-export const NODE_HEIGHT = 70;
+export const NODE_WIDTH = 200;
+export const NODE_HEIGHT = 80;
 
 // React Flow requires node data to be a plain object type
-export type TreeNodeData = { label: string; tree: TreeNode };
+export type TreeNodeData = { tree: TreeNode };
 
 export function edgeLabel(node: DecisionNode, isLeft: boolean): string {
   if (node.feature === "weekends") {
@@ -17,12 +17,7 @@ export function edgeLabel(node: DecisionNode, isLeft: boolean): string {
   return isLeft ? `≤ ${t}` : `> ${t}`;
 }
 
-// Text inside each box (temporary; Topic 9 replaces it with custom nodes)
-function nodeText(node: TreeNode): string {
-  return node.type === "leaf"
-    ? `${node.prediction} (${node.samples})`
-    : `${node.feature}?  (${node.samples})`;
-}
+
 
 // 1) Walk: nested tree -> flat lists, no positions yet
 function flatten(tree: TreeNode) {
@@ -30,10 +25,12 @@ function flatten(tree: TreeNode) {
   const edges: Edge[] = [];
 
   function visit(node: TreeNode) {
+    
     nodes.push({
-      id: node.id,
-      position: { x: 0, y: 0 }, // dagre fills this in
-      data: { label: nodeText(node), tree: node },
+        id: node.id,
+        type: node.type === "leaf" ? "leaf" : "decision", // which template to use
+        position: { x: 0, y: 0 },
+        data: { tree: node },
     });
 
     if (node.type === "node") {
