@@ -1,0 +1,43 @@
+@base = http://localhost:3001
+
+### health
+GET {{base}}/api/health
+
+### current tree
+GET {{base}}/api/tree
+
+### predict — should be Critical condition
+POST {{base}}/api/predict
+Content-Type: application/json
+
+{ "sleep": 5, "meetings": 7, "weekends": "Yes", "stress": 9.5 }
+
+### retrain with entropy, depth 2
+POST {{base}}/api/train
+Content-Type: application/json
+
+{ "params": { "maxDepth": 2, "criterion": "entropy" } }
+
+### ❌ stress out of range -> 400
+POST {{base}}/api/predict
+Content-Type: application/json
+
+{ "sleep": 5, "meetings": 7, "weekends": "Yes", "stress": 42 }
+
+### ❌ missing field -> 400
+POST {{base}}/api/predict
+Content-Type: application/json
+
+{ "sleep": 5, "weekends": "No", "stress": 3 }
+
+### ❌ broken JSON -> 400
+POST {{base}}/api/predict
+Content-Type: application/json
+
+{ "sleep": 5,
+
+### ❌ bad CSV -> 400 with line number
+POST {{base}}/api/train
+Content-Type: application/json
+
+{ "csv": "sleep,meetings,weekends,stress,status\n7,3,Maybe,5,Healthy" }
