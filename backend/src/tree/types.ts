@@ -55,10 +55,11 @@ export interface LeafNode extends BaseNode {
 }
 
 export type TreeNode = DecisionNode | LeafNode;
+export type Criterion = "gini" | "entropy";
 
 // Training settings (exposed later through the API)
 export interface TreeParams {
   maxDepth: number;
   minSamplesSplit: number;
-  criterion: "gini";
+  criterion: Criterion;
 }
