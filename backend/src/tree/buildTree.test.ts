@@ -22,6 +22,9 @@ describe("buildTree + predict", () => {
     expect(tree.threshold).toBe(5);
     expect(tree.left.type).toBe("leaf");
     expect(tree.right.type).toBe("leaf");
+    expect(tree.gain).toBeCloseTo(0.5); // root impurity 0.5 -> two pure children (0) = gain 0.5
+    expect(tree.left.id).toBe("nL");
+    expect(tree.right.id).toBe("nR");
   });
 
   it("returns a single leaf when maxDepth is 0", () => {
@@ -34,6 +37,6 @@ describe("buildTree + predict", () => {
     const tree = buildTree(data, params);
     const p = predict(tree, { sleep: 7, meetings: 3, weekends: "No", stress: 9.5 });
     expect(p.prediction).toBe("Critical condition");
-    expect(p.path).toEqual([{ feature: "stress", threshold: 5, wentLeft: false }]);
+    expect(p.path).toEqual([{ nodeId: "n", feature: "stress", threshold: 5, wentLeft: false }]);
   });
 });

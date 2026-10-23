@@ -32,6 +32,7 @@ export type ClassCounts = Record<Label, number>;
 
 // Stats every node carries (shown in the graph tooltip)
 interface BaseNode {
+  id: string;            
   samples: number;
   classCounts: ClassCounts;
   impurity: number;
@@ -44,6 +45,7 @@ export interface DecisionNode extends BaseNode {
   type: "node";
   feature: Feature;
   threshold: number | "Yes";
+  gain: number;          
   left: TreeNode;
   right: TreeNode;
 }

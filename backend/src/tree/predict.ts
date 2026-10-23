@@ -2,6 +2,7 @@ import type { ClassCounts, Feature, Features, Label, TreeNode } from "./types.js
 import { goesLeft } from "./splits.js";
 
 export interface PathStep {
+  nodeId: string;
   feature: Feature;
   threshold: number | "Yes";
   wentLeft: boolean;
@@ -19,7 +20,7 @@ export function predict(tree: TreeNode, input: Features): Prediction {
 
   while (node.type === "node") {
     const left = goesLeft(input, node.feature, node.threshold);
-    path.push({ feature: node.feature, threshold: node.threshold, wentLeft: left });
+    path.push({ nodeId: node.id, feature: node.feature, threshold: node.threshold, wentLeft: left });    
     node = left ? node.left : node.right;
   }
 
