@@ -4,7 +4,7 @@ import { bestNumericSplit, bestSplit, bestWeekendsSplit, goesLeft } from "./spli
 
 // all features fixed except the ones a test cares about
 const row = (stress: number, status: Label, weekends: "Yes" | "No" = "No"): Row => ({
-  sleep: 7, meetings: 3, weekends, stress, work_hours: 8, status,
+  sleep: 7, meetings: 3, weekends, stress, status,
 });
 
 describe("splits", () => {

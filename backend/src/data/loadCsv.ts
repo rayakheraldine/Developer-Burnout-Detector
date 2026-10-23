@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { LABELS, type Label, type Row } from "../tree/types.js";
 
-const REQUIRED_COLUMNS = ["sleep", "meetings", "weekends", "stress", "work_hours", "status"] as const;
+const REQUIRED_COLUMNS = ["sleep", "meetings", "weekends", "stress", "status"] as const;
 
 // Path to the CSV, resolved from this file's location (not from where you run the command)
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -53,7 +53,6 @@ export function parseCsv(text: string): Row[] {
       meetings: toNumber(get("meetings"), "meetings", lineNo),
       weekends,
       stress: toNumber(get("stress"), "stress", lineNo),
-      work_hours: toNumber(get("work_hours"), "work_hours", lineNo),
       status,
     });
   }

@@ -11,7 +11,7 @@ export const LABELS = [
 export type Label = (typeof LABELS)[number];
 
 // Feature names, split by how the tree handles them
-export const NUMERIC_FEATURES = ["sleep", "meetings", "stress", "work_hours"] as const;
+export const NUMERIC_FEATURES = ["sleep", "meetings", "stress"] as const;
 export type NumericFeature = (typeof NUMERIC_FEATURES)[number];
 export type Feature = NumericFeature | "weekends";
 
@@ -21,7 +21,6 @@ export interface Row {
   meetings: number;
   weekends: "Yes" | "No";
   stress: number;
-  work_hours: number;
   status: Label;
 }
 
