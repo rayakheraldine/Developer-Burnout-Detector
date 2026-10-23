@@ -2,7 +2,7 @@ import type { Row, TreeNode, TreeParams } from "./types.js";
 import { countClasses, impurity, majority } from "./impurity.js";
 import { bestSplit, goesLeft } from "./splits.js";
 
-export const DEFAULT_PARAMS: TreeParams = { maxDepth: 5, minSamplesSplit: 20, criterion: "gini" };
+export const DEFAULT_PARAMS: TreeParams = { maxDepth: 3, minSamplesSplit: 20, criterion: "gini" };
 
 export function buildTree(rows: Row[], params: TreeParams = DEFAULT_PARAMS, depth = 0, id = "n"): TreeNode {
   const n = rows.length;
