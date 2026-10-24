@@ -10,7 +10,7 @@ A full-stack web app that predicts a developer's burnout status from a few daily
 
 > ⏳ The backend runs on Render's free plan, which sleeps after about 15 minutes without traffic. **The first load can take up to a minute** while it wakes up; after that, predictions are instant.
 
-<img width="1611" height="967" alt="image" src="https://github.com/user-attachments/assets/f2079f67-a105-4f5c-8de9-d751c7f6860b" />
+![alt text](image.png)
 
 
 ## Features
@@ -162,7 +162,8 @@ The backend only describes the model. All drawing decisions (layout, colors, hig
 **Upload format.** The dashboard reads the selected file in the browser and sends its text as JSON, so no multipart upload is needed.
 - **CSV:** a header row with `sleep, meetings, weekends, stress, status`. Extra columns are ignored.
 - **JSON:** an array of objects with the same fields. `weekends` can be `"Yes"`/`"No"` or `true`/`false`.
-- At least 10 rows, maximum 5 MB.
+- At least 10 rows, maximum 5 MB. Note that a node is only split if it has at least 20 rows, so after the 80/20 train/test split a file needs about 25+ rows to produce more than a single leaf.
+
 
 Example requests, including invalid ones, are in [`backend/api.http`](backend/api.http).
 
@@ -266,6 +267,8 @@ I used Claude (Anthropic) as a mentor and pair programmer throughout the project
 - **Deployment:** Claude walked me through deploying to Render and Vercel and through the CORS errors that followed: the frontend first pointed at a wrong backend URL, I then opened a per-deployment preview URL that CORS didn't allow, and production was still serving an old build. After deploying, I noticed the dashboard showed "depth 3" next to a deeper tree I had trained, which led to syncing the controls with the loaded model.
 - **Requirements check:** at the end I had Claude compare the app against the task line by line. This found two gaps: decision nodes didn't show their condition (only the edges did), and file upload existed in the API but not in the UI. I fixed both, and Claude generated the `test-data/` files I used to test the upload and its error handling.
 
-**Where AI got things wrong or needed correcting:** the first layout used dagre, which ignores left/right order, so it had to be replaced. Some setup suggestions didn't match the current tool versions (newer `tsc --init` defaults), which only showed up when running the code.
+**Where AI got things wrong or needed correcting:**
+- the first layout used dagre, which ignores left/right order, so it had to be replaced. Some setup suggestions didn't match the current tool versions (newer `tsc --init` defaults), which only showed up when running the code.
+- **Testing the upload:** the first test files Claude generated were too small (12–14 rows). When I uploaded one, the app showed a single 40%-confidence leaf instead of a tree. We traced it to `minSamplesSplit = 20` combined with the train/test split, and regenerated the valid files with 60 rows.
 
 **My decisions:** the dataset and label mapping, dropping instead of imputing stress, choosing CART/Gini, keeping only the four required features, the default depth based on the experiment, and the project structure.
