@@ -190,11 +190,14 @@ Example requests, including invalid ones, are in [`backend/api.http`](backend/ap
 ```
 Developer-Burnout-Detector/
 ├── data/
-│   ├── data_eda.ipynb          # cleaning + EDA
-│   └── burnout_clean.csv       # training data
+│   ├── developer_burnout_dataset.csv  # raw Kaggle data + generated Weekends column
+│   ├── data_eda.ipynb                 # cleaning + EDA
+│   └── burnout_clean.csv              # cleaned training data (used by the backend)
 ├── test-data/                  # valid + invalid upload files, with expected results
 ├── backend/
 │   ├── api.http                # example + invalid requests (REST Client)
+│   ├── package.json            # dev / build / start / test scripts
+│   ├── tsconfig.json
 │   └── src/
 │       ├── index.ts            # trains the default model, starts the server
 │       ├── app.ts              # Express routes + error middleware
@@ -212,13 +215,17 @@ Developer-Burnout-Detector/
 │           ├── evaluate.ts     # seeded train/test split, accuracy
 │           └── *.test.ts       # unit tests (Vitest)
 └── frontend/
+    ├── index.html
+    ├── package.json            # dev / build / lint scripts
     └── src/
+        ├── main.tsx            # React entry point
         ├── App.tsx             # shared state, prediction requests, graph
-        ├── Dashboard.tsx       # sliders, verdict, retraining controls, file upload
+        ├── Dashboard.tsx       # sliders, Reset, verdict, retraining controls, file upload
         ├── api.ts              # backend calls + error messages
-        ├── useDebouncedValue.ts
+        ├── useDebouncedValue.ts# waits until slider input is stable
         ├── colors.ts           # one color per class
-        ├── types.ts
+        ├── types.ts            # mirrors the backend's response types
+        ├── index.css           # layout, panel, nodes, tooltips
         └── graph/
             ├── toFlow.ts       # tree → nodes/edges + layout
             └── nodes.tsx       # custom decision/leaf nodes + tooltips
