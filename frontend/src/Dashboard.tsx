@@ -91,6 +91,14 @@ export function Dashboard({ input, onInputChange, prediction, model, onTrain, tr
           </select>
         </label>
         <button
+          type="button"
+          className="secondary"
+          onClick={() => onInputChange({ sleep: 7, meetings: 3, stress: 5, weekends: false })}
+        >
+          Reset
+        </button>
+
+        <button
           disabled={training}
           onClick={() => onTrain({ maxDepth, criterion, minSamplesSplit: model?.params.minSamplesSplit ?? 20 })}
         >

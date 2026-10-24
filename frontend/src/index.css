@@ -218,3 +218,9 @@ body {
     border-bottom: 1px solid #e3e6eb;
   }
 }
+.panel button.secondary {
+  margin-top: 12px;
+  background: transparent;
+  color: #1f2430;
+  border: 1px solid #c9ced6;
+}
