@@ -1,0 +1,13 @@
+[
+  { "sleep": 8, "meetings": 2, "weekends": "No", "stress": 1.5, "status": "Healthy" },
+  { "sleep": 7.5, "meetings": 1, "weekends": "No", "stress": 2, "status": "Healthy" },
+  { "sleep": 8.5, "meetings": 3, "weekends": false, "stress": 2.5, "status": "Healthy" },
+  { "sleep": 7, "meetings": 2, "weekends": "No", "stress": 3, "status": "Healthy" },
+  { "sleep": 6.5, "meetings": 4, "weekends": "No", "stress": 4.5, "status": "Risk of burnout" },
+  { "sleep": 6, "meetings": 5, "weekends": true, "stress": 5, "status": "Risk of burnout" },
+  { "sleep": 7, "meetings": 4, "weekends": "No", "stress": 5.5, "status": "Risk of burnout" },
+  { "sleep": 5.5, "meetings": 6, "weekends": "Yes", "stress": 7.5, "status": "Vacation required" },
+  { "sleep": 5, "meetings": 7, "weekends": "Yes", "stress": 7.8, "status": "Vacation required" },
+  { "sleep": 4.5, "meetings": 9, "weekends": "Yes", "stress": 9, "status": "Critical condition" },
+  { "sleep": 4, "meetings": 10, "weekends": true, "stress": 10, "status": "Critical condition" }
+]

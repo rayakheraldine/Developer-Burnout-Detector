@@ -1,0 +1,13 @@
+sleep,meetings,weekends,stress,work_hours,status
+8,2,No,1.5,7,Healthy
+7.5,1,No,2,7.5,Healthy
+8.5,3,No,2.5,8,Healthy
+7,2,No,3,8,Healthy
+6.5,4,No,4.5,9,Risk of burnout
+6,5,Yes,5,9.5,Risk of burnout
+7,4,No,5.5,9,Risk of burnout
+6,6,No,6.5,10,Risk of burnout
+5.5,6,Yes,7.5,10.5,Vacation required
+5,7,Yes,7.8,11,Vacation required
+4.5,9,Yes,9,12,Critical condition
+4,10,Yes,10,13,Critical condition
