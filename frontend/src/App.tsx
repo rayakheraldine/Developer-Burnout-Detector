@@ -9,7 +9,12 @@ import { useDebouncedValue } from "./useDebouncedValue";
 import type { Features, Prediction, TrainedModel, TrainParams } from "./types";
 
 const nodeTypes = { decision: DecisionNodeView, leaf: LeafNodeView };
-const DEFAULT_INPUT: Features = { sleep: 7, meetings: 3, stress: 5, weekends: false };
+const DEFAULT_INPUT: Features = {
+  sleep: 7,
+  meetings: 3,
+  stress: 5,
+  weekends: false,
+};
 
 export default function App() {
   const [model, setModel] = useState<TrainedModel | null>(null);
@@ -22,7 +27,9 @@ export default function App() {
 
   // Load the current model once
   useEffect(() => {
-    getModel().then(setModel).catch((e: Error) => setError(e.message));
+    getModel()
+      .then(setModel)
+      .catch((e: Error) => setError(e.message));
   }, []);
 
   // Predict whenever the (debounced) input or the model changes
@@ -41,33 +48,34 @@ export default function App() {
   }, [debouncedInput, model]);
 
   async function handleTrain(params: TrainParams, file: File | null) {
-  setTraining(true);
-  try {
-    let data: TrainData | undefined; // undefined = built-in dataset
+    setTraining(true);
+    try {
+      let data: TrainData | undefined; // undefined = built-in dataset
 
-    if (file) {
-      if (file.size > 5_000_000) throw new Error("File is too large (max 5 MB)");
-      const text = await file.text();
+      if (file) {
+        if (file.size > 5_000_000)
+          throw new Error("File is too large (max 5 MB)");
+        const text = await file.text();
 
-      if (file.name.toLowerCase().endsWith(".json")) {
-        try {
-          data = { rows: JSON.parse(text) };
-        } catch {
-          throw new Error(`${file.name} is not valid JSON`);
+        if (file.name.toLowerCase().endsWith(".json")) {
+          try {
+            data = { rows: JSON.parse(text) };
+          } catch {
+            throw new Error(`${file.name} is not valid JSON`);
+          }
+        } else {
+          data = { csv: text };
         }
-      } else {
-        data = { csv: text };
       }
-    }
 
-    setModel(await train(params, data)); // backend validates rows, labels and ranges
-    setError(null);
-  } catch (e) {
-    setError((e as Error).message);
-  } finally {
-    setTraining(false);
+      setModel(await train(params, data)); // backend validates rows, labels and ranges
+      setError(null);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setTraining(false);
+    }
   }
-}
 
   // Node ids on the prediction path: every decision node passed + the leaf it ended in
   const activeIds = useMemo(() => {
@@ -83,17 +91,27 @@ export default function App() {
   const flow = useMemo(() => (model ? treeToFlow(model.tree) : null), [model]);
 
   const nodes = useMemo(
-    () => flow?.nodes.map((n) => ({ ...n, data: { ...n.data, active: activeIds.has(n.id) } })) ?? [],
-    [flow, activeIds]
+    () =>
+      flow?.nodes.map((n) => ({
+        ...n,
+        data: { ...n.data, active: activeIds.has(n.id) },
+      })) ?? [],
+    [flow, activeIds],
   );
 
   const edges = useMemo(
     () =>
       flow?.edges.map((e) => {
         const onPath = activeIds.has(e.source) && activeIds.has(e.target);
-        return onPath ? { ...e, animated: true, style: { stroke: "#1f2430", strokeWidth: 3 } } : e;
+        return onPath
+          ? {
+              ...e,
+              animated: true,
+              style: { stroke: "#1f2430", strokeWidth: 3 },
+            }
+          : e;
       }) ?? [],
-    [flow, activeIds]
+    [flow, activeIds],
   );
 
   return (
@@ -110,7 +128,14 @@ export default function App() {
       <main className="graph">
         {model ? (
           // key: a new model remounts the graph, so fitView runs again for the new tree size
-          <ReactFlow key={model.trainedAt} nodes={nodes} edges={edges} nodeTypes={nodeTypes} fitView nodesDraggable={false}>
+          <ReactFlow
+            key={model.trainedAt}
+            nodes={nodes}
+            edges={edges}
+            nodeTypes={nodeTypes}
+            fitView
+            nodesDraggable={false}
+          >
             <Background />
             <Controls showInteractive={false} />
           </ReactFlow>

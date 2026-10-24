@@ -1,4 +1,3 @@
-//import dagre from "@dagrejs/dagre";
 import type { Edge, Node } from "@xyflow/react";
 import type { DecisionNode, TreeNode } from "../types";
 
@@ -55,7 +54,7 @@ function flatten(tree: TreeNode) {
   return { nodes, edges };
 }
 
-// 2) Layout: ask dagre for positions
+// 2) Layout: our own tree layout (keeps left/right order)
 const H_GAP = 30; // horizontal space between leaves
 const V_GAP = 90; // vertical space between levels
 
