@@ -44,7 +44,7 @@ function flatten(tree: TreeNode) {
           id: `${node.id}->${child.id}`,
           source: node.id,
           target: child.id,
-          label: edgeLabel(node, isLeft),
+          label: isLeft ? "Yes" : "No", // left = condition true
         });
         visit(child);
       }
