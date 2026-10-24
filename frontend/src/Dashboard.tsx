@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Features, Prediction, TrainedModel, TrainParams } from "./types";
 import { CLASS_COLORS } from "./colors";
 
@@ -44,6 +44,13 @@ interface DashboardProps {
 export function Dashboard({ input, onInputChange, prediction, model, onTrain, training, error }: DashboardProps) {
   const [maxDepth, setMaxDepth] = useState(3);
   const [criterion, setCriterion] = useState<"gini" | "entropy">("gini");
+  // Keep the controls in sync with the model that's actually loaded
+    useEffect(() => {
+        if (model) {
+        setMaxDepth(model.params.maxDepth);
+        setCriterion(model.params.criterion);
+        }
+    }, [model]);
 
   // Update one field, keep the others
   const set = <K extends keyof Features>(key: K, value: Features[K]) => onInputChange({ ...input, [key]: value });

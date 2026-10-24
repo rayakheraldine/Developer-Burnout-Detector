@@ -4,9 +4,11 @@ A full-stack web app that predicts a developer's burnout status from a few daily
 
 | | |
 |---|---|
-| **Live demo** | _coming soon_ |
-| **Backend API** | _coming soon_ |
+| **Live demo** | https://developer-burnout-detector-ashy.vercel.app |
+| **Backend API** | https://developer-burnout-detector.onrender.com/api/health |
 | **Repository** | https://github.com/rayakheraldine/Developer-Burnout-Detector |
+
+> ⏳ The backend runs on Render's free plan, which sleeps after about 15 minutes without traffic. **The first load can take up to a minute** while it wakes up; after that, predictions are instant.
 
 <!-- Add a screenshot: save it as docs/screenshot.png and uncomment the line below -->
 <!-- ![App screenshot](docs/screenshot.png) -->
@@ -237,7 +239,7 @@ The frontend calls `http://localhost:3001` by default. Set `VITE_API_URL` to use
 - **The CSV parser splits on commas**, so it doesn't support quoted fields containing commas. That's fine for the provided dataset, but would need a proper parser for arbitrary uploads.
 - **Because of the label leakage described above**, the model mostly reflects how the labels were built rather than a deeper pattern.
 - **The `weekends` feature is synthetic.** It was generated from work hours, stress and sleep, so any link between weekends and burnout in this data comes from that generation step, not from real observations. This also explains why weekends correlates with the worse classes in the EDA.
-- **The model is kept in memory.** A retrained model is lost when the server restarts, and all users share the same model.
+- **The model is kept in memory.** A retrained model is lost when the server restarts, and all users share the same model: if one visitor retrains with different settings, everyone sees that tree until the next retrain or restart.
 
 ---
 
