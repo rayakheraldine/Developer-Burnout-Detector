@@ -10,7 +10,7 @@ A full-stack web app that predicts a developer's burnout status from a few daily
 
 > ⏳ The backend runs on Render's free plan, which sleeps after about 15 minutes without traffic. **The first load can take up to a minute** while it wakes up; after that, predictions are instant.
 
-![alt text](image.png)
+<img width="1891" height="921" alt="image" src="https://github.com/user-attachments/assets/82bd7f84-2184-4517-9517-2579f3766cca" />
 
 
 ## Features
