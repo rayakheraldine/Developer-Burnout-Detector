@@ -124,6 +124,15 @@ export function Dashboard({
           />
           I work on weekends
         </label>
+        <button
+          type="button"
+          className="secondary"
+          onClick={() =>
+            onInputChange({ sleep: 7, meetings: 3, stress: 5, weekends: false })
+          }
+        >
+          Reset
+        </button>
       </section>
 
       <section
@@ -195,15 +204,7 @@ export function Dashboard({
             )}
           </div>
         </label>
-        <button
-          type="button"
-          className="secondary"
-          onClick={() =>
-            onInputChange({ sleep: 7, meetings: 3, stress: 5, weekends: false })
-          }
-        >
-          Reset
-        </button>
+        
 
         <button
           disabled={training}
