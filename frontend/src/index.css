@@ -85,3 +85,136 @@ body {
   font-weight: 600;
   color: #b45309;
 }
+/* Page layout: panel on the left, graph fills the rest */
+.app {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  height: 100vh;
+}
+
+.graph {
+  position: relative;
+  min-width: 0;
+}
+
+.status {
+  padding: 24px;
+  color: #666;
+}
+
+/* Dashboard panel */
+.panel {
+  padding: 20px;
+  overflow-y: auto;
+  border-right: 1px solid #e3e6eb;
+  background: #fafbfc;
+}
+
+.panel h1 {
+  font-size: 20px;
+  margin: 0 0 16px;
+}
+
+.panel h2 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #777;
+  margin: 20px 0 10px;
+}
+
+.field {
+  display: block;
+  margin-bottom: 14px;
+}
+
+.field-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.field input[type="range"],
+.field select {
+  width: 100%;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.verdict {
+  margin-top: 20px;
+  padding: 14px;
+  border: 2px solid;
+  border-radius: 10px;
+}
+
+.verdict-label {
+  font-size: 12px;
+  color: #777;
+}
+
+.verdict-value {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 2px 0 4px;
+}
+
+.verdict-sub {
+  font-size: 13px;
+  color: #555;
+}
+
+.error {
+  margin-top: 12px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #fdecec;
+  color: #a12626;
+  font-size: 13px;
+}
+
+.panel button {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background: #1f2430;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.panel button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.stats {
+  font-size: 13px;
+  color: #555;
+  line-height: 1.5;
+}
+
+/* Prediction path in the graph */
+.tree-node.active {
+  box-shadow: 0 0 0 3px #1f2430;
+}
+
+/* Small screens: panel on top, graph below */
+@media (max-width: 760px) {
+  .app {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 70vh;
+    height: auto;
+  }
+  .panel {
+    border-right: none;
+    border-bottom: 1px solid #e3e6eb;
+  }
+}

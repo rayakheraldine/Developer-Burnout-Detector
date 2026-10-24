@@ -42,7 +42,7 @@ export function DecisionNodeView({ data }: NodeProps<Node<TreeNodeData>>) {
   const node = data.tree;
   if (node.type !== "node") return null;
   return (
-    <div className="tree-node decision" style={size}>
+    <div className={`tree-node decision${data.active ? " active" : ""}`} style={size}>
       <Handle type="target" position={Position.Top} isConnectable={false} />
       <div className="node-title">{FEATURE_NAMES[node.feature]}</div>
       <div className="node-sub">{node.samples} samples</div>
@@ -58,8 +58,8 @@ export function LeafNodeView({ data }: NodeProps<Node<TreeNodeData>>) {
   const color = CLASS_COLORS[node.prediction];
   return (
     <div
-      className="tree-node leaf"
-      style={{ ...size, borderColor: color, background: `${color}22` }} // "22" = light transparent tint
+      className={`tree-node leaf${data.active ? " active" : ""}`}
+      style={{ ...size, borderColor: color, background: `${color}22` }}
     >
       <Handle type="target" position={Position.Top} isConnectable={false} />
       <div className="node-title" style={{ color }}>{node.prediction}</div>

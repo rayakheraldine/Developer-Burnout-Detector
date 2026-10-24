@@ -35,3 +35,25 @@ export interface TrainedModel {
   testAccuracy: number;
   trainedAt: string;
 }
+// What the dashboard sends (weekends as a checkbox value; the backend accepts true/false)
+export interface Features {
+  sleep: number;
+  meetings: number;
+  stress: number;
+  weekends: boolean;
+}
+
+export interface PathStep {
+  nodeId: string;
+  feature: Feature;
+  threshold: number | "Yes";
+  wentLeft: boolean;
+}
+
+export interface Prediction {
+  prediction: Label;
+  path: PathStep[];
+  leafCounts: ClassCounts;
+}
+
+export type TrainParams = TrainedModel["params"];

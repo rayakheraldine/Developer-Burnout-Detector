@@ -6,7 +6,7 @@ export const NODE_WIDTH = 200;
 export const NODE_HEIGHT = 80;
 
 // React Flow requires node data to be a plain object type
-export type TreeNodeData = { tree: TreeNode };
+export type TreeNodeData = { tree: TreeNode; active?: boolean };
 
 export function edgeLabel(node: DecisionNode, isLeft: boolean): string {
   if (node.feature === "weekends") {
