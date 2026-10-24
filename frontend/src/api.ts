@@ -18,5 +18,7 @@ export const getModel = () => request<TrainedModel>("/api/tree");
 export const predict = (input: Features, signal?: AbortSignal) =>
   request<Prediction>("/api/predict", { method: "POST", body: JSON.stringify(input), signal });
 
-export const train = (params: TrainParams) =>
-  request<TrainedModel>("/api/train", { method: "POST", body: JSON.stringify({ params }) });
+export const train = (params: TrainParams, data?: TrainData) =>
+  request<TrainedModel>("/api/train", { method: "POST", body: JSON.stringify({ params, ...data }) });
+
+export type TrainData = { csv: string } | { rows: unknown };

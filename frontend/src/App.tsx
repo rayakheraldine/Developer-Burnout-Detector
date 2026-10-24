@@ -4,7 +4,7 @@ import "@xyflow/react/dist/style.css";
 import { treeToFlow } from "./graph/toFlow";
 import { DecisionNodeView, LeafNodeView } from "./graph/nodes";
 import { Dashboard } from "./Dashboard";
-import { getModel, predict, train } from "./api";
+import { getModel, predict, train, type TrainData } from "./api";
 import { useDebouncedValue } from "./useDebouncedValue";
 import type { Features, Prediction, TrainedModel, TrainParams } from "./types";
 
@@ -40,17 +40,34 @@ export default function App() {
     return () => controller.abort(); // runs before the next request -> old answer can never arrive late
   }, [debouncedInput, model]);
 
-  async function handleTrain(params: TrainParams) {
-    setTraining(true);
-    try {
-      setModel(await train(params)); // new model -> the predict effect re-runs automatically
-      setError(null);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setTraining(false);
+  async function handleTrain(params: TrainParams, file: File | null) {
+  setTraining(true);
+  try {
+    let data: TrainData | undefined; // undefined = built-in dataset
+
+    if (file) {
+      if (file.size > 5_000_000) throw new Error("File is too large (max 5 MB)");
+      const text = await file.text();
+
+      if (file.name.toLowerCase().endsWith(".json")) {
+        try {
+          data = { rows: JSON.parse(text) };
+        } catch {
+          throw new Error(`${file.name} is not valid JSON`);
+        }
+      } else {
+        data = { csv: text };
+      }
     }
+
+    setModel(await train(params, data)); // backend validates rows, labels and ranges
+    setError(null);
+  } catch (e) {
+    setError((e as Error).message);
+  } finally {
+    setTraining(false);
   }
+}
 
   // Node ids on the prediction path: every decision node passed + the leaf it ended in
   const activeIds = useMemo(() => {
