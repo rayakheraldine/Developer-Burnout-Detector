@@ -10,15 +10,16 @@ A full-stack web app that predicts a developer's burnout status from a few daily
 
 > ⏳ The backend runs on Render's free plan, which sleeps after about 15 minutes without traffic. **The first load can take up to a minute** while it wakes up; after that, predictions are instant.
 
-<!-- Add a screenshot: save it as docs/screenshot.png and uncomment the line below -->
-<!-- ![App screenshot](docs/screenshot.png) -->
+<img width="1611" height="967" alt="image" src="https://github.com/user-attachments/assets/f2079f67-a105-4f5c-8de9-d751c7f6860b" />
+
 
 ## Features
 
 - **Live predictions.** Move the sliders (sleep, meetings, stress) and the weekends checkbox, and the verdict updates instantly.
 - **Explained verdicts.** The path the prediction took is highlighted in the tree, and the verdict shows how confident the model is (with a "close call" warning below 70%).
-- **Interactive tree graph.** Leaves are colored by class. Hovering a node shows its training statistics: sample count, class breakdown, impurity and information gain.
+- **Interactive tree graph.** Every decision node shows its condition (e.g. "Stress level ≤ 3.45?") with Yes/No branches. Leaves are colored by class. Hovering a node shows its training statistics: sample count, class breakdown, impurity and information gain.
 - **Retraining from the UI.** Change the maximum depth or the split criterion (Gini / Entropy) and retrain. The graph redraws and the new train/test accuracy is shown.
+- **Train on your own data.** Upload a CSV or JSON file in the dashboard and retrain on it, or switch back to the built-in dataset. Invalid files are rejected with a clear message.
 
 ---
 
@@ -158,21 +159,28 @@ The backend only describes the model. All drawing decisions (layout, colors, hig
 
 `/api/train` trains on the built-in dataset by default, or on an uploaded dataset sent as a CSV string (`csv`) or a JSON array (`rows`). `params` can set `maxDepth` (0–15), `minSamplesSplit` and `criterion` (`"gini"` / `"entropy"`). The model is trained once at server startup, so predictions work immediately.
 
+**Upload format.** The dashboard reads the selected file in the browser and sends its text as JSON, so no multipart upload is needed.
+- **CSV:** a header row with `sleep, meetings, weekends, stress, status`. Extra columns are ignored.
+- **JSON:** an array of objects with the same fields. `weekends` can be `"Yes"`/`"No"` or `true`/`false`.
+- At least 10 rows, maximum 5 MB.
+
 Example requests, including invalid ones, are in [`backend/api.http`](backend/api.http).
 
 ### Validation and error handling
 - **One validator for every input.** Prediction input, uploaded rows, CSV files and the built-in dataset all pass through the same checks: required fields, numbers, ranges (stress 1–10, sleep and meetings 0–24), Yes/No or true/false for weekends, and known class labels.
 - **Errors are thrown as `HttpError`s and handled by one Express middleware.** Every error becomes a JSON response with a clear message: 400 for invalid input or malformed JSON (with the CSV line number where relevant), 413 for oversized uploads, 404 for unknown routes. Unexpected errors return a generic 500 and are logged. The server never crashes on bad input.
-- **The frontend shows the backend's error message** in the dashboard instead of failing silently.
+- **The frontend shows the backend's error message** in the dashboard instead of failing silently. Files that are too large or aren't valid JSON are caught in the browser before anything is sent. After a failed upload, the previous model stays active.
+- **Test files for uploads** are in [`test-data/`](test-data/): valid and invalid CSV/JSON datasets, each with its expected result.
 
 ### Frontend
-- **Tree → graph conversion** (`graph/toFlow.ts`): a recursive walk turns the nested tree into React Flow's flat `nodes` and `edges` lists. Edges are labelled with the split condition (`≤ 3.45` / `> 3.45`, or Yes/No).
+- **Tree → graph conversion** (`graph/toFlow.ts`): a recursive walk turns the nested tree into React Flow's flat `nodes` and `edges` lists. Each decision node asks its question ("Stress level ≤ 3.45?", "Works weekends?"), and its two edges are labelled **Yes** (left, condition true) and **No** (right).
 - **Custom tree layout.** I first used the dagre layout library, but it doesn't know which child is "left" and drew every split mirrored (`>` on the left). I replaced it with a small tree layout: leaves get x positions in visiting order (left child first), parents are centered above their children, and every depth level is its own row. Nodes can't overlap, and the left/right order always matches the split condition.
-- **Custom node components** (`graph/nodes.tsx`): decision nodes show the feature, leaves show the verdict colored by class with a confidence percentage. All class colors come from a single map (`colors.ts`), shared by the graph and the dashboard.
+- **Custom node components** (`graph/nodes.tsx`): decision nodes show the condition, leaves show the verdict colored by class with a confidence percentage. All class colors come from a single map (`colors.ts`), shared by the graph and the dashboard.
 - **Instant predictions without flooding the server:**
   - Slider input is **debounced** (250 ms), so dragging a slider sends one request when the user pauses, not dozens.
   - Every new request **cancels the previous one** (`AbortController` in the effect cleanup), so an older, slower response can never overwrite a newer one.
 - **State lives in `App`** (model, input, prediction). The dashboard and the graph both read from it, so retraining automatically re-runs the prediction and redraws the highlighted path.
+- **The model controls follow the loaded model.** The max-depth slider and criterion dropdown are synced with the parameters the current model was actually trained with, so after a page reload they never show settings that don't match the tree on screen.
 
 ---
 
@@ -183,6 +191,7 @@ Developer-Burnout-Detector/
 ├── data/
 │   ├── data_eda.ipynb          # cleaning + EDA
 │   └── burnout_clean.csv       # training data
+├── test-data/                  # valid + invalid upload files, with expected results
 ├── backend/
 │   ├── api.http                # example + invalid requests (REST Client)
 │   └── src/
@@ -204,7 +213,7 @@ Developer-Burnout-Detector/
 └── frontend/
     └── src/
         ├── App.tsx             # shared state, prediction requests, graph
-        ├── Dashboard.tsx       # sliders, verdict, retraining controls
+        ├── Dashboard.tsx       # sliders, verdict, retraining controls, file upload
         ├── api.ts              # backend calls + error messages
         ├── useDebouncedValue.ts
         ├── colors.ts           # one color per class
@@ -254,6 +263,8 @@ I used Claude (Anthropic) as a mentor and pair programmer throughout the project
 - **Learning with the mentor prompt:** for the frontend topics (tree → graph conversion, node styling and tooltips, the dashboard) I followed the four-step mentor format: intuition first, then code, AI prompting tips, and a small challenge. I wrote the edge labels, the "close call" warning and the Reset button as challenges, with Claude guiding me through them step by step.
 - **Debugging:** helped with TypeScript/Node setup issues (ES modules vs CommonJS, `verbatimModuleSyntax`, `"types": ["node"]`, replacing ts-node with tsx) and Git setup (`.gitignore`).
 - **Analysis and review:** I noticed that changing `maxDepth` seemed to have no effect; together we traced it to the data, not a bug. That led to the depth experiment and the leakage/overfitting findings. Checking screenshots of the graph, I found that every split was drawn mirrored (caused by the dagre layout) and that the tree was still at the old depth.
+- **Deployment:** Claude walked me through deploying to Render and Vercel and through the CORS errors that followed: the frontend first pointed at a wrong backend URL, I then opened a per-deployment preview URL that CORS didn't allow, and production was still serving an old build. After deploying, I noticed the dashboard showed "depth 3" next to a deeper tree I had trained, which led to syncing the controls with the loaded model.
+- **Requirements check:** at the end I had Claude compare the app against the task line by line. This found two gaps: decision nodes didn't show their condition (only the edges did), and file upload existed in the API but not in the UI. I fixed both, and Claude generated the `test-data/` files I used to test the upload and its error handling.
 
 **Where AI got things wrong or needed correcting:** the first layout used dagre, which ignores left/right order, so it had to be replaced. Some setup suggestions didn't match the current tool versions (newer `tsc --init` defaults), which only showed up when running the code.
 
