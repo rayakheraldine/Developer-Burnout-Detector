@@ -61,7 +61,7 @@ export function Dashboard({
   training,
   error,
 }: DashboardProps) {
-  const [maxDepth, setMaxDepth] = useState(3);
+  const [maxDepth, setMaxDepth] = useState(4);
   const [criterion, setCriterion] = useState<"gini" | "entropy">("gini");
   const [file, setFile] = useState<File | null>(null);
   // Keep the controls in sync with the model that's actually loaded
