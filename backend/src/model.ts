@@ -36,6 +36,7 @@ export function trainModel(rows: Row[], params: TreeParams, source: TrainedModel
   return current;
 }
 
+
 export function getModel(): TrainedModel {
   if (!current) throw new HttpError(503, "Model is not trained yet");
   return current;
