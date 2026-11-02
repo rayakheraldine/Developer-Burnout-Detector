@@ -17,7 +17,7 @@ A full-stack web app that predicts a developer's burnout status from a few daily
 
 - **Live predictions.** Move the sliders (sleep, meetings, stress) and the weekends checkbox, and the verdict updates instantly.
 - **Explained verdicts.** The path the prediction took is highlighted in the tree, and the verdict shows how confident the model is (with a "close call" warning below 70%).
-- **Interactive tree graph.** Every decision node shows its condition (e.g. "Stress level ≤ 3.45?") with Yes/No branches. Leaves are colored by class. Hovering a node shows its training statistics: sample count, class breakdown, impurity and information gain.
+- **Interactive tree graph.** Every decision node shows its condition (e.g. "Stress level ≤ 6.55?") with Yes/No branches. Leaves are colored by class. Hovering a node shows its training statistics: sample count, class breakdown, impurity and information gain.
 - **Retraining from the UI.** Change the maximum depth or the split criterion (Gini / Entropy) and retrain. The graph redraws and the new train/test accuracy is shown.
 - **Train on your own data.** Upload a CSV or JSON file in the dashboard and retrain on it, or switch back to the built-in dataset. Invalid files are rejected with a clear message.
 
@@ -27,10 +27,10 @@ A full-stack web app that predicts a developer's burnout status from a few daily
 
 | Class | Meaning |
 |---|---|
-| 🟢 Healthy | No signs of burnout |
-| 🟡 Risk of burnout | Early warning signs |
-| 🟠 Vacation required | High burnout |
-| 🔴 Critical condition | High burnout combined with very high stress |
+| 🟢 Healthy | Lowest burnout score (bottom ~23%) |
+| 🟡 Risk of burnout | Early warning signs (~51%) |
+| 🟠 Vacation required | High burnout score (~16%) |
+| 🔴 Critical condition | Highest burnout score (top ~10%) |
 
 **Input features** (the four required by the task): sleep hours, meetings per day, works on weekends (Yes/No), stress level (1–10).
 
@@ -56,19 +56,21 @@ A full-stack web app that predicts a developer's burnout status from a few daily
 Cleaning is done in [`data/data_eda.ipynb`](data/data_eda.ipynb). Output: `data/burnout_clean.csv`.
 
 1. **Rows with no target label were dropped.** Imputing the label would mean training on made-up answers.
-2. **Rows with missing stress were dropped, not imputed.** The `Critical condition` label is defined using stress (see step 5), so a filled-in stress value could contradict the row's label. A first version used mean imputation, and the EDA found 58 rows whose imputed stress (5.4) didn't fit their class. Dropping these rows removed the problem.
+2. **Rows with missing stress were dropped, not imputed.** Stress is part of the label (see step 5), so a filled-in stress value could contradict the row's label. A first version used mean imputation, and the EDA found 58 rows whose imputed stress (5.4) didn't fit their class. Dropping these rows removed the problem.
 3. **Other missing numeric values were filled with the column median** (robust to outliers). Meetings were rounded to whole numbers and hours to 2 decimals, matching the original data.
 4. **Stress was rescaled** from 0–100 to the 1–10 scale the task asks for.
-5. **The original 3 levels were mapped to the 4 target classes:**
-   - `Low` → Healthy
-   - `Medium` → Risk of burnout
-   - `High` → Vacation required, or **Critical condition** if stress ≥ 8.5
+5. **The 4 target classes are built from a burnout score of all four features.** The original `burnout_level` turned out to be just `stress_level` cut at 35 and 70, with no overlap (Low = 0–35, Medium = 35–70, High = 70–100). My first version mapped those levels to the 4 classes, so the label was a pure function of stress: the tree only ever split on stress, and moving the sleep, meetings or weekends controls never changed the verdict. The label is now:
+   - each feature turned into a 0–1 "how bad" value: stress `(s − 1) / 9`, sleep `(9 − h) / 5` (9 h+ → 0, 4 h → 1), meetings `m / 9`, weekends Yes → 1
+   - `score = 0.30·stress + 0.25·sleep + 0.25·meetings + 0.20·weekends`, plus small random noise (σ = 0.04, fixed seed) so rows near a boundary can fall on either side, as with real people
+   - the score cut at its 23rd / 74th / 90th percentiles → Healthy / Risk of burnout / Vacation required / Critical condition, which keeps the class balance of the original levels
+
+   Stress has the largest weight, but the other three together outweigh it. With stress at 40%, the tree barely used sleep at a readable depth. This makes the labels **rule-based, not observed** (see [Known limitations](#known-limitations)).
 6. **Only the four required features are kept** (sleep, meetings, weekends, stress). Daily work hours was explored in the EDA, and used to generate `Weekends`, but is not a model input.
 
 ### EDA findings
 - **Classes are imbalanced.** About half the rows are "Risk of burnout", while "Critical condition" is only about 10%.
-- **Stress is by far the strongest feature** (correlation ≈ 0.92 with the status). Work hours and weekends come next; meetings and sleep are weaker.
-- Developers who work weekends end up much more often in the worse categories.
+- **Stress is the strongest feature** (correlation ≈ 0.71 with the status), followed by weekends (0.63), meetings (0.49) and sleep (−0.46). With the original stress-only labels, stress was at 0.92 and the others had almost no independent effect.
+- Developers who work weekends end up much more often in the worse categories: almost nobody who doesn't work weekends reaches "Critical condition".
 
 ---
 
@@ -117,22 +119,24 @@ A node becomes a leaf (predicting its majority class) when:
 
 Test accuracy for different `maxDepth` values (Gini, `minSamplesSplit = 20`):
 
-| maxDepth | Real depth | Leaves | Test accuracy | Features used |
-|---|---|---|---|---|
-| 1 | 1 | 2 | 0.717 | stress |
-| 2 | 2 | 3 | 0.874 | stress |
-| **3** | **3** | **5** | **0.986** | **stress** |
-| 5 | 5 | 10 | 0.985 | stress, sleep, meetings |
-| 8 | 8 | 16 | 0.984 | stress, sleep, meetings, weekends |
+| maxDepth | Real depth | Leaves | Train accuracy | Test accuracy | Features used |
+|---|---|---|---|---|---|
+| 1 | 1 | 2 | 0.518 | 0.478 | weekends |
+| 2 | 2 | 4 | 0.659 | 0.653 | stress, weekends |
+| 3 | 3 | 8 | 0.706 | 0.699 | stress, meetings, weekends |
+| **4** | **4** | **16** | **0.791** | **0.787** | **stress, sleep, meetings, weekends** |
+| 5 | 5 | 32 | 0.816 | 0.795 | stress, sleep, meetings, weekends |
+| 8 | 8 | 173 | 0.887 | 0.824 | stress, sleep, meetings, weekends |
 
 **Interpretation:**
 
-- **Stress alone reaches 98.6% accuracy at depth 3.** This is expected, not a sign of a great model: the `Critical condition` label is defined partly by stress (≥ 8.5), and in this dataset the original burnout levels fall into almost non-overlapping stress ranges. The tree essentially learns those ranges.
-- **Deeper trees score slightly worse on the test set** (0.986 → 0.984). The extra splits on sleep, meetings and weekends fit a few noisy training rows near the class boundaries and don't generalize. This is overfitting. It can be reproduced in the app by raising the max depth and retraining.
-- **Removing daily work hours didn't change the result at depths 1–3**, because those trees only use stress. It only changed which secondary features the deeper (overfitted) trees pick.
-- **`maxDepth = 3` is therefore the default:** best test accuracy and the simplest tree.
+- **The root split is weekends, then stress, then meetings, then sleep.** Weekends is a single Yes/No jump worth 20% of the score, so it separates the classes best in one cut. Stress is the strongest *numeric* feature.
+- **Sleep only appears from depth 4.** Its effect is real, but smaller than the others in any single cut. At depth 3, moving the sleep slider never changed the verdict.
+- **Depth 4 to 8 overfits.** Test accuracy keeps rising slowly, but the train–test gap grows from 0.004 to 0.063, and the tree grows from 16 to 173 leaves. The extra splits mostly learn the label noise.
+- **`maxDepth = 4` is therefore the default:** every feature is used, there is no overfitting yet, and the graph (16 leaves) is still readable.
+- **Before the label fix** (labels from stress only), depth 3 reached 98.6% using stress alone. That number came from the leakage, not from a good model.
 
-**The gray zone around stress 3.5.** One leaf of the default tree covers stress between 3.45 and 3.55. It contains 31 Healthy and 33 Risk rows: 52% confidence and impurity 0.5, the maximum for two classes. People with almost identical stress ended up in different classes, so a prediction landing there is close to a coin flip. This is why the app shows confidence and a "close call" warning, not just the label.
+**Close calls.** About 21% of test predictions land in a leaf where the majority class has under 70%. These are people near a class boundary, where the noise in the labels makes the answer genuinely uncertain. This is why the app shows confidence and a "close call" warning, not just the label.
 
 ---
 
@@ -174,7 +178,7 @@ Example requests, including invalid ones, are in [`backend/api.http`](backend/ap
 - **Test files for uploads** are in [`test-data/`](test-data/): valid and invalid CSV/JSON datasets, each with its expected result.
 
 ### Frontend
-- **Tree → graph conversion** (`graph/toFlow.ts`): a recursive walk turns the nested tree into React Flow's flat `nodes` and `edges` lists. Each decision node asks its question ("Stress level ≤ 3.45?", "Works weekends?"), and its two edges are labelled **Yes** (left, condition true) and **No** (right).
+- **Tree → graph conversion** (`graph/toFlow.ts`): a recursive walk turns the nested tree into React Flow's flat `nodes` and `edges` lists. Each decision node asks its question ("Stress level ≤ 6.55?", "Works weekends?"), and its two edges are labelled **Yes** (left, condition true) and **No** (right).
 - **Custom tree layout.** I first used the dagre layout library, but it doesn't know which child is "left" and drew every split mirrored (`>` on the left). I replaced it with a small tree layout: leaves get x positions in visiting order (left child first), parents are centered above their children, and every depth level is its own row. Nodes can't overlap, and the left/right order always matches the split condition.
 - **Custom node components** (`graph/nodes.tsx`): decision nodes show the condition, leaves show the verdict colored by class with a confidence percentage. All class colors come from a single map (`colors.ts`), shared by the graph and the dashboard.
 - **Instant predictions without flooding the server:**
@@ -254,7 +258,7 @@ The frontend calls `http://localhost:3001` by default. Set `VITE_API_URL` to use
 
 ## Known limitations
 - **The CSV parser splits on commas**, so it doesn't support quoted fields containing commas. That's fine for the provided dataset, but would need a proper parser for arbitrary uploads.
-- **Because of the label leakage described above**, the model mostly reflects how the labels were built rather than a deeper pattern.
+- **The labels are rule-based.** They come from a weighted score I defined (step 5 of data preparation), not from a real burnout measurement. The tree is learning that formula back from the data, so its splits show *my* weights, not a discovered pattern. The original dataset's labels were no better: they were just stress cut into three ranges.
 - **The `weekends` feature is synthetic.** It was generated from work hours, stress and sleep, so any link between weekends and burnout in this data comes from that generation step, not from real observations. This also explains why weekends correlates with the worse classes in the EDA.
 - **The model is kept in memory.** A retrained model is lost when the server restarts, and all users share the same model: if one visitor retrains with different settings, everyone sees that tree until the next retrain or restart.
 
@@ -271,6 +275,7 @@ I used Claude (Anthropic) as a mentor and pair programmer throughout the project
 - **Learning with the mentor prompt:** for the frontend topics (tree → graph conversion, node styling and tooltips, the dashboard) I followed the four-step mentor format: intuition first, then code, AI prompting tips, and a small challenge. I wrote the edge labels, the "close call" warning and the Reset button as challenges, with Claude guiding me through them step by step.
 - **Debugging:** helped with TypeScript/Node setup issues (ES modules vs CommonJS, `verbatimModuleSyntax`, `"types": ["node"]`, replacing ts-node with tsx) and Git setup (`.gitignore`).
 - **Analysis and review:** I noticed that changing `maxDepth` seemed to have no effect; together we traced it to the data, not a bug. That led to the depth experiment and the leakage/overfitting findings. Checking screenshots of the graph, I found that every split was drawn mirrored (caused by the dagre layout) and that the tree was still at the old depth.
+- **"Only stress matters" bug:** the verdict changed with the stress slider but never with sleep, meetings or weekends. Claude first checked the code (split search, `goesLeft`, the frontend input object), and all of it was correct. Then, training on the real CSV, the tree used only stress, and the original `burnout_level` turned out to be stress cut at 35/70. We rebuilt the label as a weighted score of all four features. We tried several weightings and measured, for each one, how often moving each slider changes the verdict. Then we raised the default depth to 4, where all four features are used without overfitting.
 - **Deployment:** Claude walked me through deploying to Render and Vercel and through the CORS errors that followed: the frontend first pointed at a wrong backend URL, I then opened a per-deployment preview URL that CORS didn't allow, and production was still serving an old build. After deploying, I noticed the dashboard showed "depth 3" next to a deeper tree I had trained, which led to syncing the controls with the loaded model.
 - **Requirements check:** at the end I had Claude compare the app against the task line by line. This found two gaps: decision nodes didn't show their condition (only the edges did), and file upload existed in the API but not in the UI. I fixed both, and Claude generated the `test-data/` files I used to test the upload and its error handling.
 
@@ -278,4 +283,4 @@ I used Claude (Anthropic) as a mentor and pair programmer throughout the project
 - the first layout used dagre, which ignores left/right order, so it had to be replaced. Some setup suggestions didn't match the current tool versions (newer `tsc --init` defaults), which only showed up when running the code.
 - **Testing the upload:** the first test files Claude generated were too small (12–14 rows). When I uploaded one, the app showed a single 40%-confidence leaf instead of a tree. We traced it to `minSamplesSplit = 20` combined with the train/test split, and regenerated the valid files with 60 rows.
 
-**My decisions:** the dataset and label mapping, dropping instead of imputing stress, choosing CART/Gini, keeping only the four required features, the default depth based on the experiment, and the project structure.
+**My decisions:** the dataset and the label formula, dropping instead of imputing stress, choosing CART/Gini, keeping only the four required features, the default depth based on the experiment, and the project structure.
